@@ -9,6 +9,7 @@ const APP = {
   data: {accounts:[],cards:[],investments:[],transactions:[]},
   filters: {period:'all',month:'all',institution:'all',category:'all'},
   fin: {direction:'all',search:'',sort:'date',sortDir:'desc'},
+  card: {search:''},
   edit: {search:''},
   config: {
     categories:['Sem categoria','Alimentação','Assinaturas','Cartão','Compras','Educação','Entretenimento','Farmácia','Impostos','Investimentos','Lazer','Moradia','Outros','Restaurante','Saúde','Serviços','Supermercado','Transporte','Transferência','Salário','Freelance'],
@@ -89,4 +90,108 @@ const catColor = c => { let h=0; for(let i=0;i<c.length;i++) h=(h*31+c.charCodeA
 //    continua funcionando localmente, mas o usuário sabe que mudanças não
 //    estão sendo persistidas no servidor até a fila ser drenada.
 
-export { APP, NAV, esc, escAttr, fmtBRL, fmtShort, fmtDate, monthKey, monthLabel, accountLabel, isCardAccount, txCategoryName, getItemName, _allUniqueCatsCache, allUniqueCats, _invalidateCatsCache, translateCat, PALETTE, catColor };
+
+// ─── preserveScroll ───────────────────────────────────────────────────────────
+// Wrapper para chamadas de re-render que destruirao DOM via innerHTML.
+// Captura scroll antes, restaura depois em multiplos momentos (sincrono +
+// requestAnimationFrame x2 + setTimeout 0) para vencer relayout do browser.
+// Tambem cobre scrollingElement, documentElement e body para compatibilidade
+// entre engines (Safari, Chrome, Firefox).
+function preserveScroll(fn) {
+  const se = document.scrollingElement || document.documentElement;
+  const y = se.scrollTop || window.scrollY || document.body.scrollTop || 0;
+  const x = se.scrollLeft || window.scrollX || document.body.scrollLeft || 0;
+
+  const restore = () => {
+    try { window.scrollTo(x, y); } catch {}
+    try { se.scrollTop = y; se.scrollLeft = x; } catch {}
+    try { document.body.scrollTop = y; document.body.scrollLeft = x; } catch {}
+  };
+
+  try { fn(); } finally {
+    restore(); // imediato (sincrono apos o render)
+    requestAnimationFrame(() => {
+      restore(); // apos o primeiro paint
+      requestAnimationFrame(restore); // apos o segundo paint, se o conteudo cresceu
+    });
+    setTimeout(restore, 0); // fallback assincrono
+  }
+}
+
+
+// ─── preserveTxScroll ─────────────────────────────────────────────────────────
+// Ancora o scroll em UM elemento especifico (via data-txid ou id). Captura a
+// posicao do elemento na viewport ANTES do re-render, e depois reposiciona
+// o scroll para que o mesmo elemento volte a estar no mesmo ponto da tela.
+// Soluciona o problema de layout-shift quando innerHTML reconstroi DOM com
+// alturas diferentes em secoes acima da posicao do usuario.
+// Acha o ancestral scrollable do elemento (overflow-y auto/scroll com conteudo
+// que ultrapassa). Retorna o documentElement/body como fallback se nenhum
+// container interno scrollavel for encontrado.
+function findScrollableAncestor(el) {
+  let cur = el && el.parentElement;
+  while (cur && cur !== document.body && cur !== document.documentElement) {
+    const cs = getComputedStyle(cur);
+    const ov = cs.overflowY;
+    if ((ov === 'auto' || ov === 'scroll') && cur.scrollHeight > cur.clientHeight) {
+      return cur;
+    }
+    cur = cur.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
+function preserveTxScroll(clickedEl, fn) {
+  // Estrategia: calcular exatamente o scrollTop do container interno necessario
+  // para que o elemento volte a aparecer no MESMO ponto da viewport onde estava
+  // antes do re-render. Trabalha com offsets absolutos dentro do container, nao
+  // com deltas incrementais (que estavam bugando por causa de layout stale).
+  if (!clickedEl || typeof clickedEl !== 'object') {
+    try { fn(); } catch {}
+    return;
+  }
+
+  const txid = clickedEl.dataset && clickedEl.dataset.txid;
+  const sectionId = (clickedEl.closest('.section') || {}).id || '';
+  const oldTop = clickedEl.getBoundingClientRect().top;
+
+  try { fn(); } finally {
+    const restore = () => {
+      if (!txid || !sectionId) return;
+      const scope = document.getElementById(sectionId);
+      if (!scope) return;
+      const newEl = scope.querySelector(`[data-txid="${CSS.escape(String(txid))}"]`);
+      if (!newEl) return;
+
+      const container = findScrollableAncestor(newEl);
+      const isWindowScroll = container === document.documentElement
+        || container === document.body
+        || container === document.scrollingElement;
+
+      const elRect = newEl.getBoundingClientRect();
+
+      if (isWindowScroll) {
+        // Scroll na window: ajusta window.scrollY para que o elemento fique
+        // exatamente na posicao oldTop (viewport).
+        const targetY = window.scrollY + (elRect.top - oldTop);
+        window.scrollTo({ top: targetY, behavior: 'instant' });
+      } else {
+        // Scroll em container interno: calcula a posicao absoluta do elemento
+        // dentro do conteudo do container, e seta scrollTop para que essa
+        // posicao apareca em (oldTop - containerRect.top) dentro do container.
+        const containerRect = container.getBoundingClientRect();
+        const elOffsetInContainer = (elRect.top - containerRect.top) + container.scrollTop;
+        const desiredOffsetInContainer = oldTop - containerRect.top;
+        const newScrollTop = elOffsetInContainer - desiredOffsetInContainer;
+        // Clampa entre 0 e o maximo possivel
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        container.scrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
+      }
+    };
+    // Aguarda um frame para garantir que o novo layout foi calculado antes
+    // de medir e ajustar
+    requestAnimationFrame(restore);
+  }
+}
+
+export { APP, NAV, esc, escAttr, fmtBRL, fmtShort, fmtDate, monthKey, monthLabel, accountLabel, isCardAccount, txCategoryName, getItemName, _allUniqueCatsCache, allUniqueCats, _invalidateCatsCache, translateCat, PALETTE, catColor, preserveScroll, preserveTxScroll };

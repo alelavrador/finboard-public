@@ -70,10 +70,17 @@ function normalizeData(){
       const rawCategory=manual[id]||ruleBasedCategory(tx.description)||nativeCategory||'Sem categoria';
       const finalCategory=applyCatGroups(rawCategory);
       const amount=Number(tx.amount||0);
+      const _isCard=isCardAccount(acc);
+      // Cartao de credito: Pluggy entrega amount>0 = compra (saida/gasto),
+      // amount<0 = estorno (entrada/credito). Invertemos a logica de direction
+      // para que o app trate compras como expense e estornos como income.
+      const _direction = _isCard
+        ? (amount>0?'expense':'income')
+        : (amount>0?'income':'expense');
       transactions.push({...tx,id,accountId:acc.id,accountName:accountLabel(acc),itemId:acc.itemId,
-        isCard:isCardAccount(acc),accountType:acc.type||'',accountSubtype:acc.subtype||'',
+        isCard:_isCard,accountType:acc.type||'',accountSubtype:acc.subtype||'',
         nativeCategory,categoryFinal:finalCategory,
-        amountAbs:Math.abs(amount),direction:amount>0?'income':'expense'});
+        amountAbs:Math.abs(amount),direction:_direction});
     });
   });
   const manualCards=getManualCards();
@@ -291,10 +298,13 @@ function monthlyCardInvoices(card){
   const exclCats=getExclCats().map(c=>c.toLowerCase());
   filteredTransactionsAllMonths().filter(t=>t.accountId===card.id&&!exclCats.includes((t.categoryFinal||'').toLowerCase())&&!isCreditCardPayment(t)).forEach(tx=>{
     const k=monthKey(tx.date); if(!k) return;
-    if(!map[k]) map[k]=0; map[k]+=tx.amountAbs;
+    if(!map[k]) map[k]=0; map[k]+=Number(tx.amount||0);
   });
+  // Clamp em zero: meses com mais estornos do que compras viram R$ 0.
+  // O valor "negativo" significa crédito (banco te devolveu mais do que cobrou),
+  // mas pra fins de visualização não faz sentido mostrar fatura negativa.
   return Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0]))
-    .map(([m,total])=>({month:m,label:monthLabel(m),total}));
+    .map(([m,total])=>({month:m,label:monthLabel(m),total:Math.max(0,total)}));
 }
 
 function topCategories(list){

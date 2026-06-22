@@ -1,4 +1,4 @@
-import { APP, NAV, esc, escAttr, fmtBRL, fmtShort, fmtDate, monthKey, monthLabel, accountLabel, isCardAccount, txCategoryName, getItemName, _allUniqueCatsCache, allUniqueCats, _invalidateCatsCache, translateCat, PALETTE, catColor } from './utils.js';
+import { APP, NAV, esc, escAttr, fmtBRL, fmtShort, fmtDate, monthKey, monthLabel, accountLabel, isCardAccount, txCategoryName, getItemName, _allUniqueCatsCache, allUniqueCats, _invalidateCatsCache, translateCat, PALETTE, catColor, preserveScroll, preserveTxScroll } from './utils.js';
 import { STORAGE_KEYS, ALL_STORAGE_KEYS, NAMES_KEY, GROUPS_KEY, CAT_NAMES_KEY, MANUAL_CARDS_KEY, MANUAL_CARD_TXS_KEY, EXCL_CATS_KEY, INV_CATS_KEY, MANUAL_INVS_KEY, STORAGE_CACHE, STORAGE_PENDING, STORAGE_STATE, storageDefault, storageGet, storageSet, _storagePushKey, bootStorage, storageResyncAll, updateStorageBanner, getRules, saveRules, getManual, saveManual, getCustomNames, saveCustomNames, getCatGroups, saveCatGroups, getManualCards, saveManualCards, getManualCardTxs, saveManualCardTxs, getExclCats, saveExclCats, getCatNames, saveCatNames, getInvCats, saveInvCats, getManualInvs, saveManualInvs, exportAllStorage, importAllStorage, applyCatGroups } from './storage.js';
 import { ruleBasedCategory, normalizeData, INVEST_CAT_PATTERNS, TRANSFER_CAT_PATTERNS, INVEST_ACCOUNT_TYPES, isInvestTx, filteredTransactions, filteredFinTransactions, filteredTransactionsAllMonths, populateFilters, monthlyCashflow, monthlyInvested, isCreditCardPayment, monthlyCardInvoices, topCategories } from './normalize.js';
 import { svgCashflow, svgArea, svgBar, empty, kpi, chip, badge2, txTable, accFlowChart, ccEvolutionChart } from './charts.js';
@@ -307,11 +307,23 @@ function renderOverview(){
   // Inline category change nos mini-grids de Top Categorias
   document.querySelectorAll('#overview .ov-cat-sel').forEach(sel=>{
     sel.addEventListener('change',()=>{
+      sel.blur();
       const manual=getManual();
       const v=sel.value;
-      if(v) manual[sel.dataset.txid]=v; else delete manual[sel.dataset.txid];
-      saveManual(manual); normalizeData(); populateFilters();
-      renderOverview(); renderFinance();
+      const txid=sel.dataset.txid;
+      if(v) manual[txid]=v; else delete manual[txid];
+      saveManual(manual);
+      normalizeData();
+      // Atualizacao cirurgica: troca apenas o chip da transacao clicada.
+      // Evita re-render total que destroi o scroll. Outros widgets (KPIs,
+      // donut, top categorias) ficam stale ate o proximo render (mudar de
+      // tab, F5, etc).
+      const _tx = APP.data.transactions.find(t => t.id === txid);
+      if (_tx) {
+        const _wrap = sel.parentElement;
+        const _chipEl = _wrap && _wrap.querySelector('.chip');
+        if (_chipEl) _chipEl.outerHTML = chip(_tx.categoryFinal || 'Sem categoria');
+      }
     });
   });
 }
@@ -604,12 +616,25 @@ function renderFinance(){
 `;
 
   const _finSrch=document.getElementById('finSearch');
+  // Funcao reutilizavel: aplica filtro DOM (search + dir)
+  function _applyFinFilter(){
+    const low=(APP.fin.search||'').toLowerCase().trim();
+    const dir=APP.fin.direction||'all';
+    document.querySelectorAll('#finance .txtable tbody tr').forEach(row=>{
+      const dirOk=dir==='all'||row.dataset.dir===dir;
+      const srchOk=!low||row.dataset.txt.includes(low);
+      row.style.display=dirOk&&srchOk?'':'none';
+    });
+  }
+  // Re-aplica imediatamente se houver state ativo (cobre re-renders)
+  if(APP.fin.search || APP.fin.direction!=='all') _applyFinFilter();
   if(_finSrch){
     let _finTimer=null;
     _finSrch.addEventListener('input',e=>{
       e.stopPropagation();
       clearTimeout(_finTimer);
       _finTimer=setTimeout(()=>{
+        APP.fin.search=_finSrch.value; // persiste no state
         const low=_finSrch.value.toLowerCase().trim();
         const dir=document.getElementById('finDir')?.value||'all';
         const rows=document.querySelectorAll('#finance .txtable tbody tr');
@@ -643,11 +668,23 @@ function renderFinance(){
   // Inline category change in Lançamentos detalhados
   document.querySelectorAll('#finance .fin-cat-sel').forEach(sel=>{
     sel.addEventListener('change',()=>{
+      sel.blur();
       const manual=getManual();
       const v=sel.value;
-      if(v) manual[sel.dataset.txid]=v; else delete manual[sel.dataset.txid];
-      saveManual(manual); normalizeData(); populateFilters();
-      renderOverview(); renderFinance();
+      const txid=sel.dataset.txid;
+      if(v) manual[txid]=v; else delete manual[txid];
+      saveManual(manual);
+      normalizeData();
+      // Atualizacao cirurgica: troca apenas o chip da transacao clicada.
+      // Evita re-render total que destroi o scroll. Outros widgets (KPIs,
+      // donut, top categorias) ficam stale ate o proximo render (mudar de
+      // tab, F5, etc).
+      const _tx = APP.data.transactions.find(t => t.id === txid);
+      if (_tx) {
+        const _wrap = sel.parentElement;
+        const _chipEl = _wrap && _wrap.querySelector('.chip');
+        if (_chipEl) _chipEl.outerHTML = chip(_tx.categoryFinal || 'Sem categoria');
+      }
     });
   });
 }
@@ -673,7 +710,7 @@ function renderCreditCards(){
   const cardData=cards.map(c=>{
     const series=monthlyCardInvoices(c).slice(-12); // full history for chart
     const txs=filteredTransactions().filter(t=>t.accountId===c.id&&!exclCats.includes((t.categoryFinal||'').toLowerCase())&&!isCreditCardPayment(t)); // filtered for table (income = estornos)
-    const total=txs.reduce((s,t)=>s+t.amountAbs,0);
+    const total=Math.max(0, txs.reduce((s,t)=>s+Number(t.amount||0),0));
     // "Mês atual" = mês filtrado, ou o mais recente da série
     const currentMonthKey=APP.filters.month!=='all'
       ?APP.filters.month
@@ -757,8 +794,10 @@ ${(()=>{
     const catMap={};
     txs.forEach(t=>{
       if(isCreditCardPayment(t)) return;
+      const amt=Number(t.amount||0);
+      if(amt<=0) return; // pula estornos: donut so mostra gastos
       const cat=t.categoryFinal||'Sem categoria';
-      catMap[cat]=(catMap[cat]||0)+t.amountAbs;
+      catMap[cat]=(catMap[cat]||0)+amt;
     });
     const topCats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
     const catMax=topCats.length?topCats[0][1]:1;
@@ -842,8 +881,10 @@ ${(()=>{
 ${(()=>{
   const catMap={};
   allCardTxs.filter(t=>!isCreditCardPayment(t)).forEach(t=>{
+    const amt=Number(t.amount||0);
+    if(amt<=0) return; // pula estornos: donut so mostra gastos
     const c=t.categoryFinal||'Sem categoria';
-    catMap[c]=(catMap[c]||0)+t.amountAbs;
+    catMap[c]=(catMap[c]||0)+amt;
   });
   const totalGasto=Object.values(catMap).reduce((s,v)=>s+v,0);
   const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
@@ -872,7 +913,7 @@ ${(()=>{
   const bars=catEntries.map(([n,v])=>{
     const co=catColor(n);
     const pct=(v/totalGasto*100);
-    const miniTxs=allCardTxs.filter(t=>!isCreditCardPayment(t)&&(t.categoryFinal||'Sem categoria')===n);
+    const miniTxs=allCardTxs.filter(t=>!isCreditCardPayment(t)&&Number(t.amount||0)>0&&(t.categoryFinal||'Sem categoria')===n);
     const miniRows=miniTxs.map(tx=>`
       <tr>
         <td style="width:88px"><span class="num c-d" style="font-size:11px">${fmtDate(tx.date)}</span></td>
@@ -885,7 +926,7 @@ ${(()=>{
             </select>
           </div>
         </td>
-        <td style="text-align:right"><span class="num c-e" style="font-size:12px;font-weight:500">${fmtBRL(tx.amountAbs)}</span></td>
+        <td style="text-align:right"><span class="num ${tx.direction==='income'?'c-i':'c-e'}" style="font-size:12px;font-weight:500">${tx.direction==='income'?'+':''}${fmtBRL(tx.amountAbs)}</span></td>
       </tr>`).join('');
     return `
     <div class="catbar-wrap">
@@ -964,7 +1005,7 @@ ${(()=>{
       <div class="csub" style="margin-bottom:0">${allCardTxs.length} transação(ões) · todos os cartões · período filtrado</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <input id="cardTxSearch" class="finput" placeholder="🔍 Buscar..." style="font-size:12px;max-width:200px"/>
+      <input id="cardTxSearch" class="finput" placeholder="🔍 Buscar..." value="${esc(APP.card.search)}" style="font-size:12px;max-width:200px"/>
       <button id="btnNewCardTx" class="btn primary" style="font-size:12px;padding:8px 14px;white-space:nowrap">＋ Novo lançamento</button>
     </div>
   </div>
@@ -991,7 +1032,7 @@ ${(()=>{
                 </select>
               </div>
             </td>
-            <td style="text-align:right"><span class="num c-e" style="font-size:13px;font-weight:500">-${fmtBRL(tx.amountAbs)}</span></td>
+            <td style="text-align:right"><span class="num ${tx.direction==='income'?'c-i':'c-e'}" style="font-size:13px;font-weight:500">${tx.direction==='income'?'+':'-'}${fmtBRL(tx.amountAbs)}</span></td>
             <td style="text-align:center;white-space:nowrap">${tx._manual?`<button class="btn btn-edit-cardtx" data-txid="${esc(tx.id)}" aria-label="Editar lançamento" title="Editar lançamento" style="font-size:11px;padding:4px 8px;margin-right:3px">✏️</button><button class="btn btn-del-cardtx" data-txid="${esc(tx.id)}" aria-label="Excluir lançamento" title="Excluir lançamento" style="font-size:11px;padding:4px 8px;background:rgba(255,77,109,.08);color:var(--expense);border-color:rgba(255,77,109,.22)">🗑️</button>`:''}</td>
           </tr>`;
         }).join('')}
@@ -1201,21 +1242,39 @@ ${(()=>{
   // ── Inline category change nos lançamentos de cartão ─────────────────────
   document.querySelectorAll('#creditcards .card-cat-sel').forEach(sel=>{
     sel.addEventListener('change',()=>{
+      sel.blur();
       const manual=getManual();
       const v=sel.value;
-      if(v) manual[sel.dataset.txid]=v; else delete manual[sel.dataset.txid];
-      saveManual(manual); normalizeData(); populateFilters();
-      renderOverview(); renderFinance(); renderCreditCards();
+      const txid=sel.dataset.txid;
+      if(v) manual[txid]=v; else delete manual[txid];
+      saveManual(manual);
+      normalizeData();
+      const _tx = APP.data.transactions.find(t => t.id === txid);
+      if (_tx) {
+        const _wrap = sel.parentElement;
+        const _chipEl = _wrap && _wrap.querySelector('.chip');
+        if (_chipEl) _chipEl.outerHTML = chip(_tx.categoryFinal || 'Sem categoria');
+      }
     });
   });
 
   // ── Card transactions search ───────────────────────────────────────────────
   const _cSrch=document.getElementById('cardTxSearch');
+  // Funcao reutilizavel: aplica o filtro DOM com base no valor atual
+  function _applyCardSearch(){
+    const low=(APP.card.search||'').toLowerCase().trim();
+    document.querySelectorAll('#cardTxBody tr[data-txt]').forEach(r=>{
+      r.style.display=!low||r.dataset.txt.includes(low)?'':'none';
+    });
+  }
+  // Re-aplica o filtro imediatamente apos o render (recupera estado apos re-render)
+  if(APP.card.search) _applyCardSearch();
   if(_cSrch){
     let _cTimer=null;
     _cSrch.addEventListener('input',e=>{
       e.stopPropagation(); clearTimeout(_cTimer);
       _cTimer=setTimeout(()=>{
+        APP.card.search=_cSrch.value; // persiste no state
         const low=_cSrch.value.toLowerCase().trim();
         document.querySelectorAll('#cardTxBody tr[data-txt]').forEach(r=>{
           r.style.display=!low||r.dataset.txt.includes(low)?'':'none';
@@ -2175,10 +2234,18 @@ function renderEditar(){
   // Change tx category
   document.querySelectorAll('.tx-cat-sel').forEach(sel=>{
     sel.addEventListener('change',()=>{
+      sel.blur();
       const manual=getManual();
-      manual[sel.dataset.txid]=sel.value;
-      saveManual(manual); normalizeData(); populateFilters();
-      renderOverview(); renderFinance();
+      const txid=sel.dataset.txid;
+      manual[txid]=sel.value;
+      saveManual(manual);
+      normalizeData();
+      const _tx = APP.data.transactions.find(t => t.id === txid);
+      if (_tx) {
+        const _wrap = sel.parentElement;
+        const _chipEl = _wrap && _wrap.querySelector('.chip');
+        if (_chipEl) _chipEl.outerHTML = chip(_tx.categoryFinal || 'Sem categoria');
+      }
       // highlight the row briefly
       const row=sel.closest('tr');
       if(row){row.style.background='rgba(6,247,180,.06)'; setTimeout(()=>{row.style.background=''},800);}
@@ -2188,9 +2255,12 @@ function renderEditar(){
   // Reset single tx category
   document.querySelectorAll('.btn-reset-one').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      const manual=getManual(); delete manual[btn.dataset.txid];
-      saveManual(manual); normalizeData(); populateFilters();
-      renderOverview(); renderFinance(); renderEditar();
+      const txid=btn.dataset.txid;
+      const manual=getManual(); delete manual[txid];
+      preserveTxScroll(btn, () => {
+        saveManual(manual); normalizeData(); populateFilters();
+        renderOverview(); renderFinance(); renderEditar();
+      });
     });
   });
 
