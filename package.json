@@ -1,0 +1,38 @@
+{
+  "name": "pluggy-all-in-one",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "description": "Dashboard de financas pessoais que consolida contas, cartoes, investimentos e emprestimos de varios bancos brasileiros numa unica tela, via Pluggy (Open Finance Brasil).",
+  "author": "Alexandre Lavrador",
+  "license": "MIT",
+  "homepage": "https://github.com/SEU_USUARIO/finboard-one#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SEU_USUARIO/finboard-one.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SEU_USUARIO/finboard-one/issues"
+  },
+  "keywords": [
+    "finance",
+    "pluggy",
+    "open-finance",
+    "dashboard",
+    "sqlite",
+    "brazil"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "private": true
+}

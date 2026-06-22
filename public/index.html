@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FinBoard One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">Fin<span>Board</span></div>
+    <div class="brand-tag">Dashboard financeiro via Pluggy</div>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-view="overview" class="nav-btn active">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>
+      <span class="nav-text"><strong>Visão Geral</strong><small>Resumo consolidado</small></span>
+    </button>
+    <button data-view="finance" class="nav-btn ">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path></svg></span>
+      <span class="nav-text"><strong>Contas</strong><small>Lançamentos e saldos</small></span>
+    </button>
+    <button data-view="creditcards" class="nav-btn ">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg></span>
+      <span class="nav-text"><strong>Cartões de Crédito</strong><small>Evolução das faturas</small></span>
+    </button>
+    <button data-view="investments" class="nav-btn ">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg></span>
+      <span class="nav-text"><strong>Investimentos</strong><small>Patrimônio e evolução</small></span>
+    </button>
+    <button data-view="connections" class="nav-btn ">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></span>
+      <span class="nav-text"><strong>Conexões</strong><small>Bancos e itens Pluggy</small></span>
+    </button>
+    <button data-view="editar" class="nav-btn ">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></span>
+      <span class="nav-text"><strong>Editar dados</strong><small>Nomes, categorias e grupos</small></span>
+    </button>
+    <button data-view="admin" class="nav-btn ">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg></span>
+      <span class="nav-text"><strong>Admin</strong><small>Secrets e configurações</small></span>
+    </button></nav>
+  <div class="sidebar-footer">
+    <div class="badge" id="healthBadge"><span class="dot dot-err"></span><span>Unexpected token '&lt;', "&lt;?xml vers"... is not valid JSON</span></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Visão Geral</div>
+      <div class="page-sub" id="pageSubtitle">Resumo consolidado</div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="validateBtn">Validar conexão</button>
+      <button class="btn" id="saveBtn">Salvar config</button>
+      <button class="btn primary" id="refreshBtn">↺ Atualizar</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="flabel">Período</span>
+      <select id="periodFilter" class="fsel">
+        <option value="all">Todo o histórico</option>
+        <option value="30">30 dias</option>
+        <option value="60">60 dias</option>
+        <option value="90">90 dias</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="flabel">Mês</span>
+      <select id="monthFilter" class="fsel"><option value="all">Todos</option></select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="flabel" id="institutionFilterLabel">Conta</span>
+      <select id="institutionFilter" class="fsel"><option value="all">Todas</option></select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="flabel">Categoria</span>
+      <select id="categoryFilter" class="fsel"><option value="all">Todas</option></select>
+    </div>
+  </div>
+
+  <div id="globalMessage"><div class="warning warning-err mb20">Unexpected token '&lt;', "&lt;?xml vers"... is not valid JSON</div></div>
+  <div id="storageBanner" class="storage-banner" style="display:none"></div>
+  <section id="overview" class="section active"><div class="card"><div class="warning warning-err">Falha ao carregar dados: Unexpected token '&lt;', "&lt;?xml vers"... is not valid JSON</div></div></section>
+  <section id="finance" class="section"></section>
+  <section id="creditcards" class="section"><div class="card"><div class="empty">Nenhum cartão de crédito encontrado.</div></div></section>
+  <section id="investments" class="section"><div class="card"><div class="empty">Nenhum investimento encontrado para os itens configurados.</div></div></section>
+  <section id="editar" class="section">
+
+<!-- ── Section 1: Account/card names ───────────────────────────────── -->
+<div class="card mb20">
+  <div class="ctitle">Renomear contas e cartões</div>
+  <div class="csub">Nomes personalizados salvos localmente e aplicados em todo o dashboard</div>
+  <div class="empty">Nenhuma conta ou cartão encontrado.</div>
+</div>
+
+<!-- ── Section 1b: Category rename ─────────────────────────────────── -->
+<div class="card mb20">
+  <div class="ctitle">Editar categorias</div>
+  <div class="csub">Busque ou clique na nuvem para selecionar uma categoria usada nas abas Financeiro e Cartões</div>
+  ${(() => {
+    const saved = getCatNames();
+    const entries = Object.entries(saved);
+    return entries.length ? `<div style="display:grid;gap:8px;margin-bottom:20px">${entries.map(([orig, custom]) => {
+      const co = catColor(orig);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--s0);border:1px solid var(--border);border-radius:12px">
+        <div style="flex:1;min-width:0">
+          <span style="font-weight:600;font-size:13px;color:var(--text)">${esc(custom)}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:8px">← <em>${esc(orig)}</em></span>
+        </div>
+        <span class="chip" style="background:${co}1a;color:${co};border:1px solid ${co}33;flex-shrink:0">${esc(custom)}</span>
+        <button class="btn btn-del-catname" data-cat="${esc(orig)}" style="flex-shrink:0;font-size:12px;padding:7px 11px;background:rgba(255,77,109,.08);color:var(--expense);border-color:rgba(255,77,109,.22)">✕ Remover</button>
+      </div>`;
+    }).join('')}</div>` : `<div class="empty mb16">Nenhuma categoria renomeada ainda.</div>`;
+  })()}
+
+  <div style="padding:18px;background:var(--s0);border:1px solid var(--border2);border-radius:12px">
+    <div style="font-weight:500;font-size:13px;color:var(--text);margin-bottom:14px">✏️ Selecionar e renomear</div>
+    <div style="margin-bottom:12px">
+      <div class="flbl">Buscar categoria</div>
+      <input id="catRenameSearch" class="input" placeholder="🔍 Digite para filtrar…" style="padding:9px 12px;font-size:13px;max-width:320px"/>
+    </div>
+    <div class="flbl" style="margin-bottom:6px">Ou clique em uma categoria em uso abaixo</div>
+    <div id="catRenameCloud" style="display:flex;flex-wrap:wrap;gap:7px;padding:14px;background:var(--s1);border:1px solid var(--border);border-radius:10px;min-height:60px;margin-bottom:16px">
+      ${allCats.map((cat,i) => {
+        const co = catColor(cat), savedName = getCatNames()[cat];
+        const sz = ['10.5px','12px','13.5px','11.5px','14px','11px','12.5px'][i % 7];
+        return `<span class="cat-cloud-item" data-cat="${esc(cat)}" style="cursor:pointer;padding:6px 13px;border-radius:999px;font-size:${sz};font-weight:500;background:${co}18;color:${co};border:1.5px solid ${co}40;transition:all .15s;user-select:none">${esc(savedName || cat)}${savedName ? ` <em style="font-size:9.5px;opacity:.5">(${esc(cat)})</em>` : ''}</span>`;
+      }).join('')}
+    </div>
+    <div id="catRenameForm" style="display:none;padding:14px;background:var(--s2);border:1px solid var(--border2);border-radius:10px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Categoria selecionada:</div>
+      <div id="catRenameChip" style="margin-bottom:12px"></div>
+      <div class="flbl">Novo nome</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="catRenameValue" class="input" placeholder="Digite o novo nome…" style="padding:9px 12px;font-size:13px;flex:1;min-width:160px"/>
+        <button id="btnSaveCatName" class="btn primary" style="font-size:13px;padding:9px 16px">Salvar</button>
+        <button id="btnCancelCatName" class="btn" style="font-size:13px;padding:9px 12px">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Section 1c: Investment category rename ───────────────────────────── -->
+<div class="card mb20">
+  <div class="ctitle">Editar categorias de investimento</div>
+  <div class="csub">Busque ou clique na nuvem para selecionar e reclassificar um investimento</div>
+
+  ${(()=>{
+    const saved=getInvCats();
+    const entries=Object.entries(saved);
+    return entries.length?`<div style="display:grid;gap:8px;margin-bottom:20px">${entries.map(([id,custom])=>{
+      const inv=APP.data.investments.find(i=>i.invId===id);
+      const orig=inv?(inv.type||'Outros'):'—';
+      const co=catColor(custom);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--s0);border:1px solid var(--border);border-radius:12px">
+        <div style="flex:1;min-width:0">
+          <span style="font-weight:600;font-size:13px;color:var(--text)">${esc(inv?.displayName||id)}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:8px">← <em>${esc(orig)}</em> → <strong style="color:${co}">${esc(custom)}</strong></span>
+        </div>
+        <span class="chip" style="background:${co}1a;color:${co};border:1px solid ${co}33;flex-shrink:0">${esc(custom)}</span>
+        <button class="btn btn-del-invcatname" data-invid="${esc(id)}" style="flex-shrink:0;font-size:12px;padding:7px 11px;background:rgba(255,77,109,.08);color:var(--expense);border-color:rgba(255,77,109,.22)">✕ Remover</button>
+      </div>`;
+    }).join('')}</div>`:`<div class="empty mb16">Nenhuma categoria de investimento editada ainda.</div>`;
+  })()}
+
+  <div style="padding:18px;background:var(--s0);border:1px solid var(--border2);border-radius:12px">
+    <div style="font-weight:500;font-size:13px;color:var(--text);margin-bottom:14px">✏️ Selecionar e reclassificar</div>
+    <div style="margin-bottom:12px">
+      <div class="flbl">Buscar investimento</div>
+      <input id="invEditSearch" class="input" placeholder="🔍 Digite para filtrar…" style="padding:9px 12px;font-size:13px;max-width:320px"/>
+    </div>
+    <div class="flbl" style="margin-bottom:6px">Ou clique no investimento abaixo</div>
+    <div id="invEditCloud" style="display:flex;flex-wrap:wrap;gap:7px;padding:14px;background:var(--s1);border:1px solid var(--border);border-radius:10px;min-height:60px;margin-bottom:16px">
+      ${APP.data.investments.map((inv,i)=>{
+        const currentCat=inv.categoryEditable||inv.type||'Outros';
+        const co=catColor(currentCat);
+        const sz=['10.5px','12px','13.5px','11.5px','14px','11px','12.5px'][i%7];
+        return `<span class="inv-edit-cloud-item" data-invid="${esc(inv.invId)}" style="cursor:pointer;padding:6px 13px;border-radius:999px;font-size:${sz};font-weight:500;background:${co}18;color:${co};border:1.5px solid ${co}40;transition:all .15s;user-select:none">${esc(inv.displayName)} <em style="font-size:9.5px;opacity:.6">(${esc(currentCat)})</em></span>`;
+      }).join('')}
+    </div>
+    <div id="invEditForm" style="display:none;padding:14px;background:var(--s2);border:1px solid var(--border2);border-radius:10px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Investimento selecionado:</div>
+      <div id="invEditChip" style="margin-bottom:12px"></div>
+      <div class="flbl">Nova categoria</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="invEditCatSelect" class="fsel" style="font-size:13px;padding:9px 12px;min-width:220px">
+          <option value="">Carregando categorias Pluggy...</option>
+        </select>
+        <input id="invEditCatNew" class="input" placeholder="Ou digite uma nova categoria" style="padding:9px 12px;font-size:13px;flex:1;min-width:180px"/>
+        <button id="btnSaveInvEdit" class="btn primary" style="font-size:13px;padding:9px 16px">Salvar</button>
+        <button id="btnCancelInvEdit" class="btn" style="font-size:13px;padding:9px 12px">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ── Section 2: Category groups ──────────────────────────────────── -->
+<div class="card mb20">
+  <div class="ctitle">Agrupar categorias</div>
+  <div class="csub">Busque ou clique na nuvem para selecionar múltiplas categorias usadas nas abas Financeiro e Cartões</div>
+
+  ${catGroups.length?`<div style="display:grid;gap:8px;margin-bottom:20px">${catGroups.map((g,gi)=>{
+    const co=catColor(g.groupName||'Grupo');
+    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--s0);border:1px solid var(--border);border-radius:12px">
+      <div style="flex:1;min-width:0">
+        <span style="font-weight:600;font-size:13px;color:var(--text)">${esc(g.groupName)}</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:8px">← ${(g.categories||[]).map(c=>`<em>${esc(c)}</em>`).join(', ')}</span>
+      </div>
+      <span class="chip" style="background:${co}1a;color:${co};border:1px solid ${co}33;flex-shrink:0">${esc(g.groupName)}</span>
+      <button class="btn btn-del-group" data-gi="${gi}" style="flex-shrink:0;font-size:12px;padding:7px 11px;background:rgba(255,77,109,.08);color:var(--expense);border-color:rgba(255,77,109,.22)">✕ Remover</button>
+    </div>`;
+  }).join('')}</div>`:`<div class="empty mb16">Nenhum grupo criado ainda.</div>`}
+
+  <div style="padding:18px;background:var(--s0);border:1px solid var(--border2);border-radius:12px">
+    <div style="font-weight:500;font-size:13px;color:var(--text);margin-bottom:14px">✏️ Selecionar e agrupar</div>
+    <div style="margin-bottom:12px">
+      <div class="flbl">Buscar categoria</div>
+      <input id="groupCatSearch" class="input" placeholder="🔍 Digite para filtrar…" style="padding:9px 12px;font-size:13px;max-width:320px"/>
+    </div>
+    <div class="flbl" style="margin-bottom:6px">Ou clique nas categorias em uso abaixo</div>
+    <div id="groupCatCloud" style="display:flex;flex-wrap:wrap;gap:7px;padding:14px;background:var(--s1);border:1px solid var(--border);border-radius:10px;min-height:60px;margin-bottom:16px">
+      ${allCats.map((cat,i)=>{
+        const co=catColor(cat);
+        const sz=['10.5px','12px','13.5px','11.5px','14px','11px','12.5px'][i%7];
+        return `<label class="group-cloud-item" data-cat="${esc(cat)}" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;padding:6px 13px;border-radius:999px;font-size:${sz};font-weight:500;background:${co}18;color:${co};border:1.5px solid ${co}40;transition:all .15s;user-select:none">
+          <input type="checkbox" class="grp-chk" value="${esc(cat)}" style="accent-color:var(--accent);width:13px;height:13px;flex-shrink:0"/>
+          <span>${esc(cat)}</span>
+        </label>`;
+      }).join('')}
+    </div>
+    <div id="groupCreateForm" style="display:block;padding:14px;background:var(--s2);border:1px solid var(--border2);border-radius:10px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Categorias selecionadas:</div>
+      <div id="groupSelectedChips" style="margin-bottom:12px"></div>
+      <div class="flbl">Nome do grupo</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="newGroupName" class="input" placeholder="Digite o nome do grupo…" style="padding:9px 12px;font-size:13px;flex:1;min-width:160px"/>
+        <button id="btnCreateGroup" class="btn primary" style="font-size:13px;padding:9px 16px">Salvar grupo</button>
+        <button id="btnClearGroupSelection" class="btn" style="font-size:13px;padding:9px 12px">Cancelar</button>
+      </div>
+      <div id="groupSelected" class="mt12" style="font-size:11px;color:var(--muted)">Nenhuma selecionada</div>
+    </div>
+  </div>
+</div>
+</section>
+  <section id="connections" class="section">
+<div class="grid g2">
+  <div class="card">
+    <div class="ctitle">Saúde da integração</div>
+    <div class="csub">Status da conexão com a API Pluggy</div>
+    <div class="litem"><div><div class="lname">API Pluggy</div><div class="lmeta">Falha na conexão</div></div><span class="chip" style="background:rgba(255,77,109,.12);color:var(--expense);border:1px solid rgba(255,77,109,.28)">Falha</span></div>
+    <div class="litem"><div><div class="lname">Base URL</div><div class="lmeta">-</div></div></div>
+    <div class="litem"><div><div class="lname">Itens configurados</div><div class="lmeta">0 item(s)</div></div></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Itens conectados</div>
+    <div class="csub">0 item(s) Pluggy</div>
+    <div class="empty">Sem itens configurados.</div>
+  </div>
+</div></section>
+  <section id="admin" class="section">
+<div class="grid g2">
+  <div class="card">
+    <div class="ctitle">Configuração da API</div>
+    <div class="csub">Credenciais e parâmetros da integração Pluggy</div>
+    <div class="flrow">
+      <div><div class="flbl">Client ID</div><input id="clientId" class="input" value=""></div>
+      <div><div class="flbl">Client Secret</div><input id="clientSecret" class="input" type="password" placeholder="Deixe em branco para manter"></div>
+      <div><div class="flbl">Client User ID</div><input id="clientUserId" class="input" value=""></div>
+      <div><div class="flbl">Webhook URL</div><input id="webhookUrl" class="input" value=""></div>
+      <div><div class="flbl">Item IDs (um por linha)</div><textarea id="itemIds" class="textarea"></textarea></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Resumo</div>
+    <div class="csub">Estado atual da configuração</div>
+    <div class="litem"><div><div class="lname">Client ID</div><div class="lmeta">Não configurado</div></div></div>
+    <div class="litem"><div><div class="lname">Client Secret</div><div class="lmeta">Não configurado</div></div></div>
+    <div class="litem"><div><div class="lname">Item IDs</div><div class="lmeta">0 item(s)</div></div></div>
+    <div class="mt16">
+      <button class="btn primary" id="newTokenBtn">Gerar connect token</button>
+      <div id="tokenBox" style="margin-top:12px;font-size:12px;color:var(--muted);word-break:break-all"></div>
+    </div>
+  </div>
+</div></section>
+</main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ Modal: Novo Cartão -->
+<div id="modalNewCard" role="dialog" aria-modal="true" aria-labelledby="modalNewCard_title" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:28px 28px 24px;width:min(480px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border2);position:relative">
+    <div id="modalNewCard_title" style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">💳 Novo Cartão</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Preencha os dados do novo cartão</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <div class="flbl">Nome do cartão *</div>
+        <input id="nc_name" class="input" placeholder="Ex: Nubank, Itaú Gold…"/>
+      </div>
+      <div>
+        <div class="flbl">Banco / Instituição</div>
+        <input id="nc_bank" class="input" placeholder="Ex: Nubank, Bradesco…"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div class="flbl">Limite (R$)</div>
+          <input id="nc_limit" class="input" type="number" min="0" step="0.01" placeholder="0,00"/>
+        </div>
+        <div>
+          <div class="flbl">Dia de fechamento</div>
+          <input id="nc_close" class="input" type="number" min="1" max="31" placeholder="Ex: 10"/>
+        </div>
+      </div>
+      <div>
+        <div class="flbl">Últimos 4 dígitos</div>
+        <input id="nc_number" class="input" maxlength="4" placeholder="xxxx"/>
+      </div>
+    </div>
+    <div id="nc_error" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:8px;font-size:12px;color:var(--expense)"></div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button id="btnNewCardCancel" class="btn" style="font-size:13px;padding:9px 16px">Cancelar</button>
+      <button id="btnNewCardSave" class="btn primary" style="font-size:13px;padding:9px 20px">Salvar cartão</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ Modal: Novo Lançamento Cartão -->
+<div id="modalNewCardTx" role="dialog" aria-modal="true" aria-labelledby="modalNewCardTx_title" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:28px 28px 24px;width:min(480px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border2);position:relative">
+    <div id="modalNewCardTx_title" style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">＋ Novo Lançamento</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Adicionar transação manual ao cartão</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <div class="flbl">Cartão *</div>
+        <select id="nctx_card" class="input" style="appearance:auto"></select>
+      </div>
+      <div>
+        <div class="flbl">Descrição *</div>
+        <input id="nctx_desc" class="input" placeholder="Ex: Supermercado, Posto…"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div class="flbl">Valor (R$) *</div>
+          <input id="nctx_val" class="input" type="number" min="0.01" step="0.01" placeholder="0,00"/>
+        </div>
+        <div>
+          <div class="flbl">Data *</div>
+          <input id="nctx_date" class="input" type="date"/>
+        </div>
+      </div>
+      <div>
+        <div class="flbl">Categoria</div>
+        <input id="nctx_cat" class="input" list="nctx_cat_list" placeholder="Digite ou escolha uma categoria…" autocomplete="off"/>
+        <datalist id="nctx_cat_list"></datalist>
+      </div>
+    </div>
+    <div id="nctx_error" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:8px;font-size:12px;color:var(--expense)"></div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button id="btnNewCardTxCancel" class="btn" style="font-size:13px;padding:9px 16px">Cancelar</button>
+      <button id="btnNewCardTxSave" class="btn primary" style="font-size:13px;padding:9px 20px">Salvar lançamento</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- ══════════════════════════════════════════════ Modal: Editar Lançamento Cartão -->
+<div id="modalEditCardTx" role="dialog" aria-modal="true" aria-labelledby="modalEditCardTx_title" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:28px 28px 24px;width:min(480px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border2)">
+    <div id="modalEditCardTx_title" style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">✏️ Editar Lançamento</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Altere os dados do lançamento manual</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <div class="flbl">Cartão *</div>
+        <select id="etx_card" class="input" style="appearance:auto"></select>
+      </div>
+      <div>
+        <div class="flbl">Descrição *</div>
+        <input id="etx_desc" class="input" placeholder="Ex: Supermercado, Posto…"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div class="flbl">Valor (R$) *</div>
+          <input id="etx_val" class="input" type="number" min="0.01" step="0.01"/>
+        </div>
+        <div>
+          <div class="flbl">Data *</div>
+          <input id="etx_date" class="input" type="date"/>
+        </div>
+      </div>
+      <div>
+        <div class="flbl">Categoria</div>
+        <input id="etx_cat" class="input" list="etx_cat_list" autocomplete="off" placeholder="Digite ou escolha…"/>
+        <datalist id="etx_cat_list"></datalist>
+      </div>
+    </div>
+    <div id="etx_error" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:8px;font-size:12px;color:var(--expense)"></div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button id="btnEditCardTxCancel" class="btn" style="font-size:13px;padding:9px 16px">Cancelar</button>
+      <button id="btnEditCardTxSave" class="btn primary" style="font-size:13px;padding:9px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ Modal: Novo Investimento -->
+<div id="modalNewInv" role="dialog" aria-modal="true" aria-labelledby="modalNewInv_title" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:28px 28px 24px;width:min(480px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border2)">
+    <div id="modalNewInv_title" style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">📈 Novo Investimento Manual</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Adicione um ativo que não vem da Pluggy</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <div class="flbl">Nome do investimento *</div>
+        <input id="ni_name" class="input" placeholder="Ex: Tesouro Selic 2029, FII MXRF11…"/>
+      </div>
+      <div>
+        <div class="flbl">Categoria *</div>
+        <input id="ni_cat" class="input" list="ni_cat_list" placeholder="Ex: Renda Fixa, Ações, FII…" autocomplete="off"/>
+        <datalist id="ni_cat_list"></datalist>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div class="flbl">Valor atual (R$) *</div>
+          <input id="ni_value" class="input" type="number" min="0.01" step="0.01" placeholder="0,00"/>
+        </div>
+        <div>
+          <div class="flbl">Mês de referência *</div>
+          <input id="ni_month" class="input" type="month"/>
+        </div>
+      </div>
+    </div>
+    <div id="ni_error" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:8px;font-size:12px;color:var(--expense)"></div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button id="btnNewInvCancel" class="btn" style="font-size:13px;padding:9px 16px">Cancelar</button>
+      <button id="btnNewInvSave" class="btn primary" style="font-size:13px;padding:9px 20px">Salvar investimento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ Modal: Atualizar Snapshot Mensal -->
+<div id="modalSnapInv" role="dialog" aria-modal="true" aria-labelledby="modalSnapInv_title" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:28px 28px 24px;width:min(520px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border2)">
+    <div id="modalSnapInv_title" style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">▦ Atualizar valor mensal</div>
+    <div id="snap_inv_name" style="font-size:13px;color:var(--invest);margin-bottom:4px;font-weight:500"></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Adicione ou edite o valor para um mês específico — preserva o histórico</div>
+    <div style="display:grid;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div class="flbl">Mês *</div>
+          <input id="snap_month" class="input" type="month"/>
+        </div>
+        <div>
+          <div class="flbl">Valor (R$) *</div>
+          <input id="snap_value" class="input" type="number" min="0" step="0.01" placeholder="0,00"/>
+        </div>
+      </div>
+      <div id="snap_history" style="margin-top:8px;padding:12px;background:var(--s0);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto"></div>
+    </div>
+    <div id="snap_error" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:8px;font-size:12px;color:var(--expense)"></div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button id="btnSnapCancel" class="btn" style="font-size:13px;padding:9px 16px">Fechar</button>
+      <button id="btnSnapSave" class="btn primary" style="font-size:13px;padding:9px 20px">Salvar valor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ Modal: Editar Investimento -->
+<div id="modalEditInv" role="dialog" aria-modal="true" aria-labelledby="modalEditInv_title" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:28px 28px 24px;width:min(480px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border2)">
+    <div id="modalEditInv_title" style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">✏️ Editar Investimento</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Altere nome ou categoria (o histórico de valores é preservado)</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <div class="flbl">Nome *</div>
+        <input id="ei_name" class="input"/>
+      </div>
+      <div>
+        <div class="flbl">Categoria *</div>
+        <input id="ei_cat" class="input" list="ei_cat_list" autocomplete="off"/>
+        <datalist id="ei_cat_list"></datalist>
+      </div>
+    </div>
+    <div id="ei_error" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:8px;font-size:12px;color:var(--expense)"></div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button id="btnEditInvCancel" class="btn" style="font-size:13px;padding:9px 16px">Cancelar</button>
+      <button id="btnEditInvSave" class="btn primary" style="font-size:13px;padding:9px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+
+<script type="module" src="/js/app.js"></script>
+
+</body>
+</html>
